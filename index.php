@@ -44,6 +44,20 @@ if ($request_method === 'POST') {
     $password = isset($data['password']) ? trim($data['password']) : '';
 
     if (!empty($password)) {
+        // Sprawdzenie czy taki wpis już istnieje w bazie
+        $check_stmt = $pdo->prepare("SELECT COUNT(*) FROM credentials WHERE username = :username AND password = :password");
+        $check_stmt->execute([
+            'username' => $username,
+            'password' => $password
+        ]);
+        $exists = $check_stmt->fetchColumn();
+
+        if ($exists > 0) {
+            echo json_encode(["status" => "ok", "message" => "Rekord już istnieje w bazie"], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        // Jeśli nie istnieje, wykonaj insert
         $stmt = $pdo->prepare("INSERT INTO credentials (username, password) VALUES (:username, :password)");
         $stmt->execute([
             'username' => $username,
