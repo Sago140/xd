@@ -22,7 +22,7 @@ $request_method = $_SERVER['REQUEST_METHOD'];
 // Podgląd w przeglądarce (GET) - teraz całkowicie bezpieczny, pokazuje tylko status
 if ($request_method === 'GET') {
     header("Content-Type: application/json; charset=UTF-8");
-    echo json_encode(["status" => "ok", "message" => "Serwer działa poprawnie"], JSON_UNESCAPED_UNICODE);
+    echo json_encode(["status" => "ok", "message" => "alive"], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
